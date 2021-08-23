@@ -1,0 +1,57 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: usercreationconfigmap
+data:
+  usercreation.sh: |
+   #!/bin/bash
+   # need to wait 15 seconds till the container is up and running to create the realms
+   sleep 15
+   /opt/jboss/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080/auth --realm master --user admin --password 'admin'
+   echo "--Create Group--"
+   /opt/jboss/keycloak/bin/kcadm.sh create groups -r master -b '{ "name": "Audi" }'
+   /opt/jboss/keycloak/bin/kcadm.sh create groups -r master -b '{ "name": "Vw" }'
+   /opt/jboss/keycloak/bin/kcadm.sh create groups -r master -b '{ "name": "Porsche" }'
+   counter=0
+   while [ $counter -le 10 ]
+   do
+     /opt/jboss/keycloak/bin/add-user-keycloak.sh -u user$counter -p user$counter --realm master
+     ((counter++))
+   done
+   /opt/jboss/keycloak/bin/jboss-cli.sh --connect command=:reload
+   /opt/jboss/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080/auth --realm master --user admin --password 'admin'
+   userCounter=$(/opt/jboss/keycloak/bin/kcadm.sh get users -r master | grep id | awk '{print $3}' | cut -d '"' -f 2 | wc -l)
+   echo $userCounter
+
+   counter=1
+   while [ $counter -le $userCounter ]
+   do
+     randomNumber=$((1 + $RANDOM % 3))
+     echo "--Get UserID--"
+     userID=$(/opt/jboss/keycloak/bin/kcadm.sh get users -r master | grep id | awk '{print $3}' | cut -d '"' -f 2 | head  -$counter | tail -1)
+     echo "--UserID of User $counter: $userID--"
+     echo "--Get GroupID--"
+     groupID=$(/opt/jboss/keycloak/bin/kcadm.sh get groups -r master | grep id | awk '{print $3}' | cut -d '"' -f 2| head  -$randomNumber | tail -1)
+     echo "--GroupID: $groupID--"
+     echo "--Adding Users to Group--"
+     /opt/jboss/keycloak/bin/kcadm.sh update users/$userID/groups/$groupID -r master
+     ((counter++))
+   done
+
+
+
+
+  #  #!/bin/bash
+  #  # need to wait 15 seconds till the container is up and running to create the realms
+  #  sleep 15
+  #  echo "--Create Group--"
+  #  /opt/jboss/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080/auth --realm master --user admin --password 'admin'
+  #  ./kcadm.sh create groups -r master -b '{ "name": "Admins" }'
+  #  echo "--GetUserID--"
+  #  userID=$(/opt/jboss/keycloak/bin/kcadm.sh get users -r master | grep id | awk '{print $3}' | cut -d '"' -f 2)
+  #  echo "--GetGroupID--"
+  #  groupID=$(./kcadm.sh get groups -r master | grep id | awk '{print $3}' | cut -d '"' -f 2)
+  #  echo "--Add User to Group--"
+  #  ./kcadm.sh update users/$userID/groups/$groupID -r master
+  #  echo "--funktioniert--"

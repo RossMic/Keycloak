@@ -1,0 +1,46 @@
+# Default values for keycloak.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+#docker.io/jboss/keycloak
+  repository: docker.io/jboss/keycloak
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+# MICHI KOMMENTAR
+# hier kann man den namen der applikation überschreiben
+nameOverride: ""
+fullnameOverride: ""
+restartPolicy: Always
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: keycloak
+
+postgresql:
+  # If `true`, the Postgresql dependency is enabled
+  enabled: true
+  # PostgreSQL User to create
+  postgresqlUsername: keycloak
+  # PostgreSQL Password for the new user
+  postgresqlPassword: keycloak
+  # PostgreSQL Database to create
+  postgresqlDatabase: keycloak
+  # Persistent Volume Storage configuration
+
+  # PostgreSQL network policy configuration
+  networkPolicy:
+    enabled: false
+
+service:
+  type: NodePort
+  port: 80
+ingress:
+  enabled: true

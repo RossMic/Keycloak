@@ -1,0 +1,17 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: keycloak
+spec:
+  tls:
+    - secretName: cso-keycloak-com-tls
+      hosts:
+        - cso-keycloak.com
+  rules:
+  - host: cso-keycloak.com
+  defaultBackend:
+    service:
+      name: keycloak-svc
+      port:
+        number: 80
